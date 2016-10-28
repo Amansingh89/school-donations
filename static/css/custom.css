@@ -6,8 +6,29 @@
    font-size: 60px;
 }
 
+#primary-subjects {
+   height: 450px;
+margin-top: 20px;
+}
 
+#povertylevel{
+   height : 248px;
+}
 
+#funding-map{
+   height: 300px;
+   margin-left: 10px;
+}
+#funding-chart{
+   margin-left: 60px;
+}
+
+#teacher-prefixs{
+   margin-left: 60px;
+}
+#resource{
+   height: 78px;
+}
 
 .dc-chart g.row text {
    fill: black;
@@ -54,4 +75,24 @@
    padding-top: 4px;
    padding-bottom: 0px;
 
+}
+
+body.application {
+    background: green;
+    padding: 60px 20px 0;
+}
+.chart-title{
+ font-family: 'Russo One', sans-serif;
+}
+
+.navbar-header{
+  display: flex;
+   justify-content: center;
+}
+
+#title{
+   font-family: 'Russo One', sans-serif;
+}
+#nav{
+   background-color: black;
 }

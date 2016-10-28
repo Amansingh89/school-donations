@@ -3,9 +3,10 @@
  */
 queue()
    .defer(d3.json, "/donorsUS/projects")
+   .defer(d3.json, "/static/us-states.json")
    .await(makeGraphs);
 
-function makeGraphs(error, projectsJson) {
+function makeGraphs(error, projectsJson, statesJson) {
 
    //Clean projectsJson data
    var donorsUSProjects = projectsJson;
@@ -41,12 +42,23 @@ function makeGraphs(error, projectsJson) {
        return d["funding_status"];
    });
 
+    var primarySubjectDim = ndx.dimension (function (d) {
+        return d["primary_focus_subject"];
+    });
+
+    var teacherDim = ndx.dimension (function (d) {
+        return d["teacher_prefix"];
+    });
+
+
 
    //Calculate metrics
    var numProjectsByDate = dateDim.group();
    var numProjectsByResourceType = resourceTypeDim.group();
    var numProjectsByPovertyLevel = povertyLevelDim.group();
+   var numProjectsByprimarySubject = primarySubjectDim.group();
    var numProjectsByFundingStatus = fundingStatus.group();
+    var numProjectByTeacherPrefix = teacherDim.group();
    var totalDonationsByState = stateDim.group().reduceSum(function (d) {
        return d["total_donations"];
    });
@@ -67,10 +79,13 @@ function makeGraphs(error, projectsJson) {
    //Charts
    var timeChart = dc.barChart("#time-chart");
    var resourceTypeChart = dc.rowChart("#resource-type-row-chart");
+    var primarySubjectchart =  dc.rowChart("#primary-subjects");
    var povertyLevelChart = dc.rowChart("#poverty-level-row-chart");
    var numberProjectsND = dc.numberDisplay("#number-projects-nd");
    var totalDonationsND = dc.numberDisplay("#total-donations-nd");
    var fundingStatusChart = dc.pieChart("#funding-chart");
+   var fundingStatusmap = dc.geoChoroplethChart("#funding-map");
+    var teacherprefixChart = dc.pieChart("#teacher-prefixs");
 
 
    selectField = dc.selectMenu('#menu-select')
@@ -112,20 +127,57 @@ function makeGraphs(error, projectsJson) {
        .group(numProjectsByResourceType)
        .xAxis().ticks(4);
 
+    primarySubjectchart
+       .width(300)
+       .height(400)
+       .dimension(primarySubjectDim)
+       .group(numProjectsByprimarySubject)
+       .xAxis().ticks(4);
+
+
+
    povertyLevelChart
        .width(300)
-       .height(250)
+       .height(200)
        .dimension(povertyLevelDim)
        .group(numProjectsByPovertyLevel)
        .xAxis().ticks(4);
 
    fundingStatusChart
-       .height(220)
-       .radius(90)
-       .innerRadius(40)
+       .height(455)
+       .radius(150)
+       .innerRadius(60)
        .transitionDuration(1500)
        .dimension(fundingStatus)
        .group(numProjectsByFundingStatus);
+
+
+    teacherprefixChart
+       .height(455)
+       .radius(150)
+       .innerRadius(60)
+       .transitionDuration(1500)
+       .dimension(teacherDim)
+       .group(numProjectByTeacherPrefix);
+
+
+    fundingStatusmap.width(700)
+        .height(270)
+        .dimension(stateDim)
+        .group(totalDonationsByState)
+        .colors(["#E2F2FF", "#C4E4FF", "#9ED2FF", "#81C5FF", "#6BBAFF", "#51AEFF", "#36A2FF", "#1E96FF", "#0089FF", "#7C151D"])
+        .colorDomain([0, max_state])
+        .overlayGeoJson(statesJson["features"], "state", function (d) {
+            return d.properties.name;
+        })
+        .projection(d3.geo.albersUsa()
+            .scale(600)
+            .translate([340, 150]))
+        .title(function (p) {
+            return "State: " + p["key"]
+                + "\n"
+                + "Total Donations: " + Math.round(p["value"]) + " $";
+        });
 
 
    dc.renderAll();
